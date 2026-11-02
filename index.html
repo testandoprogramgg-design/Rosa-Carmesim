@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050204">
+  <title>Minha Linda Rosa Carmesim</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Georgia, "Times New Roman", serif;
+      background: #050204;
+      color: #f0c3ca;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      min-width: 320px;
+      min-height: 100svh;
+      margin: 0;
+      overflow: hidden;
+      background: #050204;
+    }
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .intro-screen {
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      background: #050204;
+      opacity: 1;
+      transition: opacity 700ms ease;
+    }
+
+    .intro-content {
+      display: grid;
+      justify-items: center;
+      gap: 30px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .intro-message {
+      margin: 0;
+      color: #e7a0ad;
+      font-size: clamp(20px, 5vw, 32px);
+      font-weight: 400;
+      line-height: 1.45;
+      text-wrap: balance;
+    }
+
+    .love-button {
+      position: relative;
+      z-index: 2;
+      max-width: calc(100vw - 32px);
+      padding: 13px 22px;
+      border: 1px solid #b94a60;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #6e2034, #421321);
+      box-shadow: 0 0 22px #9b304226, inset 0 1px #ffccd31c;
+      color: #ffe3e6;
+      font: 400 clamp(14px, 3.8vw, 17px)/1.35 Georgia, "Times New Roman", serif;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .love-button:hover {
+      background: linear-gradient(135deg, #853047, #541a2d);
+      box-shadow: 0 0 28px #c34a603d, inset 0 1px #ffccd32a;
+    }
+
+    .love-button:focus-visible {
+      outline: 2px solid #f1a6b2;
+      outline-offset: 5px;
+    }
+
+    .love-button:disabled {
+      cursor: default;
+    }
+
+    .intro-screen.is-leaving {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .rose-screen {
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      visibility: hidden;
+      opacity: 0;
+      background:
+        radial-gradient(ellipse 32% 34% at 50% 73%, #3b101b38 0%, #210a122b 45%, transparent 100%),
+        radial-gradient(ellipse 58% 56% at 50% 68%, #17080e 0%, #0b0508 48%, #050204 100%);
+      pointer-events: none;
+      transition: opacity 800ms ease;
+    }
+
+    .rose-screen.is-entering {
+      visibility: visible;
+    }
+
+    .rose-screen.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .scene {
+      position: relative;
+      width: min(100vw, 760px, calc(100svh * 760 / 850));
+      aspect-ratio: 760 / 850;
+      isolation: isolate;
+    }
+
+    h1 {
+      position: absolute;
+      z-index: 3;
+      top: 5.2%;
+      left: 3%;
+      width: 94%;
+      margin: 0;
+      color: #e7a0ad;
+      font-size: clamp(17px, 3.2vw, 25px);
+      font-weight: 400;
+      letter-spacing: 0.045em;
+      text-align: center;
+      opacity: 0;
+    }
+
+    .flower-light {
+      position: absolute;
+      z-index: -1;
+      left: 50%;
+      top: 75%;
+      width: 40%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, #98243820 0%, #7417250d 38%, transparent 72%);
+      filter: blur(20px);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .stem {
+      fill: none;
+      stroke: url(#stem-gradient);
+      stroke-width: 7;
+      stroke-linecap: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      filter: drop-shadow(0 0 7px #79a36b35);
+    }
+
+    .leaf {
+      fill: url(#leaf-gradient);
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .petal {
+      opacity: 0;
+      filter: drop-shadow(0 0 3px #d3546525);
+    }
+
+    .petal-form {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .heart-words {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .love-word {
+      position: absolute;
+      color: #efb4bf;
+      font-size: clamp(6px, 1.1vw, 8.5px);
+      font-weight: 400;
+      letter-spacing: 0.015em;
+      line-height: 1;
+      white-space: nowrap;
+      opacity: 0;
+      text-shadow: 0 0 8px #d43a5830;
+      will-change: left, top, transform, opacity;
+    }
+
+    @media (max-width: 420px) {
+      h1 {
+        letter-spacing: 0.025em;
+      }
+
+      .flower-light {
+        width: 48%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="screen intro-screen" aria-label="Uma declaração de amor">
+      <div class="intro-content">
+        <p class="intro-message">eu te amo muito, amor da minha vida</p>
+        <button class="love-button" type="button">eu também te amo muito, meu bebê</button>
+      </div>
+    </section>
+
+    <section class="screen rose-screen" aria-label="Minha Linda Rosa Carmesim" aria-hidden="true">
+      <div class="scene">
+        <h1>Minha Linda Rosa Carmesim</h1>
+        <div class="flower-light" aria-hidden="true"></div>
+        <svg viewBox="0 0 760 850" role="img" aria-label="Uma rosa vermelha florescendo">
+          <defs>
+            <radialGradient id="petal-velvet" cx="30%" cy="20%" r="85%">
+              <stop offset="0" stop-color="#f6a0ad"/>
+              <stop offset=".42" stop-color="#d94b67"/>
+              <stop offset="1" stop-color="#72132b"/>
+            </radialGradient>
+            <radialGradient id="petal-rose" cx="34%" cy="19%" r="88%">
+              <stop offset="0" stop-color="#ffb5b4"/>
+              <stop offset=".46" stop-color="#e45c70"/>
+              <stop offset="1" stop-color="#8d1b32"/>
+            </radialGradient>
+            <radialGradient id="petal-deep" cx="34%" cy="18%" r="90%">
+              <stop offset="0" stop-color="#e77a88"/>
+              <stop offset=".52" stop-color="#bc304d"/>
+              <stop offset="1" stop-color="#5a1026"/>
+            </radialGradient>
+            <linearGradient id="stem-gradient" x1="0" y1="0" x2="1" y2="0">
+              <stop stop-color="#365e3d"/>
+              <stop offset=".52" stop-color="#83a86e"/>
+              <stop offset="1" stop-color="#315438"/>
+            </linearGradient>
+            <linearGradient id="leaf-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop stop-color="#94b878"/>
+              <stop offset="1" stop-color="#375d3e"/>
+            </linearGradient>
+            <radialGradient id="flower-halo">
+              <stop stop-color="#c8324a" stop-opacity=".16"/>
+              <stop offset="1" stop-color="#c8324a" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="380" cy="610" rx="150" ry="130" fill="url(#flower-halo)"/>
+          <g id="stem-and-leaves" aria-hidden="true">
+            <path class="stem" pathLength="1" d="M380 802 C374 741 391 679 380 617"/>
+            <path class="leaf" d="M376 731 C344 722 320 696 322 674 C349 677 372 695 382 716 C390 689 414 671 439 673 C435 700 411 722 383 731 Z"/>
+            <path class="leaf" d="M382 694 C398 675 421 666 444 674 C433 692 410 704 384 704 Z"/>
+          </g>
+          <g id="petals" aria-hidden="true"></g>
+          <path id="heart-path" d="M380 493 C331 449 126 353 126 261 C126 174 283 145 380 239 C477 145 634 174 634 261 C634 353 429 449 380 493 Z" fill="none" stroke="none" aria-hidden="true"/>
+        </svg>
+        <div class="heart-words" aria-hidden="true"></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const introScreen = document.querySelector(".intro-screen");
+    const roseScreen = document.querySelector(".rose-screen");
+    const button = document.querySelector(".love-button");
+    const heartPath = document.querySelector("#heart-path");
+    const petalsLayer = document.querySelector("#petals");
+    const wordsLayer = document.querySelector(".heart-words");
+    const stem = document.querySelector(".stem");
+    const leaves = [...document.querySelectorAll(".leaf")];
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const svgNS = "http://www.w3.org/2000/svg";
+    const flower = { x: 380, y: 596 };
+    const petalPath = "M0 26 C-36 17 -43 -18 -27 -45 C-16 -65 10 -69 27 -47 C46 -21 31 16 0 26 Z";
+
+    let clickCount = 0;
+    let teleportPosition = null;
+    let roseAnimationStarted = false;
+
+    function makePetalLayers() {
+      return [
+        { count: 9, radius: 20, scale: 0.78, start: 5, colors: ["petal-velvet", "petal-deep", "petal-rose"] },
+        { count: 6, radius: 12, scale: 0.65, start: 0, colors: ["petal-rose", "petal-velvet", "petal-deep"] },
+        { count: 4, radius: 4, scale: 0.49, start: 12, colors: ["petal-rose", "petal-deep"] },
+        { count: 1, radius: 0, scale: 0.33, start: 0, colors: ["petal-rose"] }
+      ];
+    }
+
+    function createPetals() {
+      const petals = [];
+      for (const [layerIndex, layer] of makePetalLayers().entries()) {
+        for (let index = 0; index < layer.count; index += 1) {
+          const angle = layer.start + index * 360 / layer.count;
+          const radians = angle * Math.PI / 180;
+          const x = flower.x + Math.sin(radians) * layer.radius;
+          const y = flower.y - Math.cos(radians) * layer.radius;
+          const scale = layer.scale * (0.92 + index % 3 * 0.08);
+          const group = document.createElementNS(svgNS, "g");
+          group.setAttribute("transform", `translate(${x} ${y}) rotate(${angle})`);
+          group.setAttribute("class", "petal");
+          const form = document.createElementNS(svgNS, "g");
+          form.setAttribute("class", "petal-form");
+          const path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", petalPath);
+          path.setAttribute("fill", `url(#${layer.colors[index % layer.colors.length]})`);
+          form.append(path);
+          group.append(form);
+          petalsLayer.append(group);
+          petals.push({ element: group, form, x, y, angle, scale, layerIndex });
+        }
+      }
+      return petals.sort((first, second) => second.layerIndex - first.layerIndex);
+    }
+
+    function heartPositions(count) {
+      const length = heartPath.getTotalLength();
+      return Array.from({ length: count }, (_, index) => {
+        const distance = (index + 0.5) * length / count;
+        const point = heartPath.getPointAtLength(distance);
+        const before = heartPath.getPointAtLength((distance - 1 + length) % length);
+        const after = heartPath.getPointAtLength((distance + 1) % length);
+        let angle = Math.atan2(after.y - before.y, after.x - before.x) * 180 / Math.PI;
+        if (angle > 90) angle -= 180;
+        if (angle < -90) angle += 180;
+        angle = Math.max(-32, Math.min(32, angle));
+        return { x: point.x, y: point.y, angle };
+      });
+    }
+
+    const petals = createPetals();
+    const destinations = heartPositions(petals.length);
+
+    function percentX(value) {
+      return `${value / 760 * 100}%`;
+    }
+
+    function percentY(value) {
+      return `${value / 850 * 100}%`;
+    }
+
+    function wait(duration) {
+      return new Promise(resolve => window.setTimeout(resolve, duration));
+    }
+
+    function chooseTeleportPosition() {
+      const width = button.offsetWidth;
+      const height = button.offsetHeight;
+      const padding = 18;
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const minX = Math.min(padding + halfWidth, window.innerWidth / 2);
+      const maxX = Math.max(window.innerWidth - padding - halfWidth, window.innerWidth / 2);
+      const minY = Math.min(padding + halfHeight, window.innerHeight / 2);
+      const maxY = Math.max(window.innerHeight - padding - halfHeight, window.innerHeight / 2);
+
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const position = {
+          x: minX + Math.random() * (maxX - minX),
+          y: minY + Math.random() * (maxY - minY)
+        };
+        if (!teleportPosition || Math.hypot(position.x - teleportPosition.x, position.y - teleportPosition.y) > 100) {
+          return position;
+        }
+      }
+      const corners = [
+        { x: minX, y: minY },
+        { x: maxX, y: minY },
+        { x: minX, y: maxY },
+        { x: maxX, y: maxY }
+      ];
+      return corners.find(position => !teleportPosition
+        || Math.hypot(position.x - teleportPosition.x, position.y - teleportPosition.y) > 100)
+        || { x: maxX, y: maxY };
+    }
+
+    async function teleportButton() {
+      button.disabled = true;
+      const centeredButton = button.style.position === "fixed";
+      const scaleTransform = scale => centeredButton
+        ? `translate(-50%, -50%) scale(${scale})`
+        : `scale(${scale})`;
+      const disappear = button.animate(
+        [
+          { opacity: 1, transform: scaleTransform(1) },
+          { opacity: 0, transform: scaleTransform(.72) }
+        ],
+        { duration: reducedMotion ? 1 : 190, easing: "ease-in", fill: "forwards" }
+      );
+      await disappear.finished;
+
+      teleportPosition = chooseTeleportPosition();
+      button.style.width = `${button.offsetWidth}px`;
+      button.style.position = "fixed";
+      button.style.left = `${teleportPosition.x}px`;
+      button.style.top = `${teleportPosition.y}px`;
+      button.style.transform = "translate(-50%, -50%)";
+
+      const appear = button.animate(
+        [
+          { opacity: 0, transform: "translate(-50%, -50%) scale(.76)" },
+          { opacity: 1, transform: "translate(-50%, -50%) scale(1.04)", offset: 0.76 },
+          { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }
+        ],
+        { duration: reducedMotion ? 1 : 390, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" }
+      );
+      await appear.finished;
+      button.disabled = false;
+    }
+
+    function moveWord(record, destination) {
+      const word = document.createElement("span");
+      word.className = "love-word";
+      word.textContent = "eu te amo";
+      word.style.left = percentX(record.x);
+      word.style.top = percentY(record.y - 7);
+      wordsLayer.append(word);
+
+      if (reducedMotion) {
+        word.style.left = percentX(destination.x);
+        word.style.top = percentY(destination.y);
+        word.style.opacity = "1";
+        word.style.transform = `translate(-50%, -50%) rotate(${destination.angle}deg)`;
+        return Promise.resolve();
+      }
+
+      const start = { x: record.x, y: record.y - 7 };
+      const control = {
+        x: (start.x + destination.x) / 2,
+        y: Math.min(start.y, destination.y) - 125
+      };
+      const keyframes = Array.from({ length: 9 }, (_, index) => {
+        const progress = index / 8;
+        const inverse = 1 - progress;
+        const x = inverse ** 2 * start.x + 2 * inverse * progress * control.x + progress ** 2 * destination.x;
+        const y = inverse ** 2 * start.y + 2 * inverse * progress * control.y + progress ** 2 * destination.y;
+        return {
+          left: percentX(x),
+          top: percentY(y),
+          opacity: Math.min(1, progress * 7),
+          transform: `translate(-50%, -50%) rotate(${destination.angle * progress}deg) scale(${0.78 + 0.22 * progress})`,
+          offset: progress
+        };
+      });
+      return word.animate(keyframes, {
+        duration: 3000,
+        easing: "linear",
+        fill: "forwards"
+      }).finished;
+    }
+
+    function animateLeaf(leaf, index) {
+      if (reducedMotion) {
+        leaf.style.opacity = "1";
+        leaf.style.transform = "scale(1)";
+        return Promise.resolve();
+      }
+      return leaf.animate(
+        [
+          { opacity: 0, transform: "scale(.12) rotate(-12deg)" },
+          { opacity: 1, transform: "scale(1.04) rotate(2deg)", offset: 0.82 },
+          { opacity: 1, transform: "scale(1) rotate(0deg)" }
+        ],
+        { duration: 850, delay: index * 210, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" }
+      ).finished;
+    }
+
+    function animatePetal(petal) {
+      if (reducedMotion) {
+        petal.element.style.opacity = "1";
+        petal.form.style.transform = `scale(${petal.scale})`;
+        return Promise.resolve();
+      }
+
+      const visibility = petal.element.animate(
+        [{ opacity: 0 }, { opacity: 1 }],
+        { duration: 820, easing: "ease-out", fill: "forwards" }
+      ).finished;
+      const bloom = petal.form.animate(
+        [
+          { transform: `rotate(-15deg) scale(${petal.scale * 0.12})` },
+          { transform: `rotate(4deg) scale(${petal.scale * 1.06})`, offset: 0.8 },
+          { transform: `rotate(0deg) scale(${petal.scale})` }
+        ],
+        { duration: 820, easing: "cubic-bezier(.18,.72,.24,1)", fill: "forwards" }
+      ).finished;
+      return Promise.all([visibility, bloom]);
+    }
+
+    async function startRoseAnimation() {
+      if (roseAnimationStarted) return;
+      roseAnimationStarted = true;
+
+      const title = document.querySelector("h1");
+      if (reducedMotion) {
+        title.style.opacity = "1";
+        stem.style.strokeDashoffset = "0";
+        await Promise.all(leaves.map((leaf, index) => animateLeaf(leaf, index)));
+        petals.forEach((petal, index) => {
+          petal.element.style.opacity = "1";
+          petal.form.style.transform = `scale(${petal.scale})`;
+          const word = document.createElement("span");
+          word.className = "love-word";
+          word.textContent = "eu te amo";
+          word.style.left = percentX(destinations[index].x);
+          word.style.top = percentY(destinations[index].y);
+          word.style.opacity = "1";
+          word.style.transform = `translate(-50%, -50%) rotate(${destinations[index].angle}deg)`;
+          wordsLayer.append(word);
+        });
+        return;
+      }
+
+      title.animate(
+        [{ opacity: 0, transform: "translateY(9px)" }, { opacity: 1, transform: "translateY(0)" }],
+        { duration: 1200, easing: "ease-out", fill: "forwards" }
+      );
+
+      await stem.animate(
+        [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }],
+        { duration: 1700, easing: "cubic-bezier(.35,.03,.2,1)", fill: "forwards" }
+      ).finished;
+
+      await Promise.all(leaves.map((leaf, index) => animateLeaf(leaf, index)));
+
+      const petalAnimations = [];
+      const wordAnimations = [];
+      for (let index = 0; index < petals.length; index += 1) {
+        const petal = petals[index];
+        petalAnimations.push(animatePetal(petal));
+        await wait(340);
+        wordAnimations.push(moveWord(petal, destinations[index]));
+      }
+
+      await Promise.all([...petalAnimations, ...wordAnimations]);
+    }
+
+    async function enterRoseScreen() {
+      button.disabled = true;
+      if (!reducedMotion) {
+        await button.animate(
+          [
+            { opacity: 1, transform: "translate(-50%, -50%) scale(1)" },
+            { opacity: 0, transform: "translate(-50%, -50%) scale(.82)" }
+          ],
+          { duration: 230, easing: "ease-in", fill: "forwards" }
+        ).finished;
+      }
+
+      roseScreen.classList.add("is-entering");
+      requestAnimationFrame(() => roseScreen.classList.add("is-visible"));
+      introScreen.classList.add("is-leaving");
+      await wait(reducedMotion ? 20 : 850);
+      introScreen.style.visibility = "hidden";
+      introScreen.setAttribute("aria-hidden", "true");
+      roseScreen.setAttribute("aria-hidden", "false");
+      await startRoseAnimation();
+    }
+
+    button.addEventListener("click", async () => {
+      if (button.disabled || roseAnimationStarted) return;
+      clickCount += 1;
+      if (clickCount < 3) {
+        await teleportButton();
+        return;
+      }
+      await enterRoseScreen();
+    });
+  </script>
+</body>
+</html>
