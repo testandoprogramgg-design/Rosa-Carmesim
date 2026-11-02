@@ -220,7 +220,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: 180ms !important;
       }
     }
   </style>
@@ -345,7 +345,9 @@
         let angle = Math.atan2(after.y - before.y, after.x - before.x) * 180 / Math.PI;
         if (angle > 90) angle -= 180;
         if (angle < -90) angle += 180;
-        angle = Math.max(-32, Math.min(32, angle));
+        const isSideCurve = point.y >= 185 && point.y <= 330 && Math.abs(point.x - 380) >= 200;
+        const maxAngle = isSideCurve ? 55 : 32;
+        angle = Math.max(-maxAngle, Math.min(maxAngle, angle));
         return { x: point.x, y: point.y, angle };
       });
     }
@@ -407,7 +409,7 @@
           { opacity: 1, transform: scaleTransform(1) },
           { opacity: 0, transform: scaleTransform(.72) }
         ],
-        { duration: reducedMotion ? 1 : 190, easing: "ease-in", fill: "forwards" }
+        { duration: reducedMotion ? 100 : 190, easing: "ease-in", fill: "forwards" }
       );
       await disappear.finished;
 
@@ -424,7 +426,7 @@
           { opacity: 1, transform: "translate(-50%, -50%) scale(1.04)", offset: 0.76 },
           { opacity: 1, transform: "translate(-50%, -50%) scale(1)" }
         ],
-        { duration: reducedMotion ? 1 : 390, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" }
+        { duration: reducedMotion ? 150 : 390, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" }
       );
       await appear.finished;
       button.disabled = false;
@@ -465,38 +467,32 @@
         };
       });
       return word.animate(keyframes, {
-        duration: 3000,
+        duration: reducedMotion ? 650 : 3000,
         easing: "linear",
         fill: "forwards"
       }).finished;
     }
 
     function animateLeaf(leaf, index) {
-      if (reducedMotion) {
-        leaf.style.opacity = "1";
-        leaf.style.transform = "scale(1)";
-        return Promise.resolve();
-      }
       return leaf.animate(
         [
           { opacity: 0, transform: "scale(.12) rotate(-12deg)" },
           { opacity: 1, transform: "scale(1.04) rotate(2deg)", offset: 0.82 },
           { opacity: 1, transform: "scale(1) rotate(0deg)" }
         ],
-        { duration: 850, delay: index * 210, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards" }
+        {
+          duration: reducedMotion ? 260 : 850,
+          delay: index * (reducedMotion ? 70 : 210),
+          easing: "cubic-bezier(.2,.8,.25,1)",
+          fill: "forwards"
+        }
       ).finished;
     }
 
     function animatePetal(petal) {
-      if (reducedMotion) {
-        petal.element.style.opacity = "1";
-        petal.form.style.transform = `scale(${petal.scale})`;
-        return Promise.resolve();
-      }
-
       const visibility = petal.element.animate(
         [{ opacity: 0 }, { opacity: 1 }],
-        { duration: 820, easing: "ease-out", fill: "forwards" }
+        { duration: reducedMotion ? 210 : 820, easing: "ease-out", fill: "forwards" }
       ).finished;
       const bloom = petal.form.animate(
         [
@@ -504,7 +500,11 @@
           { transform: `rotate(4deg) scale(${petal.scale * 1.06})`, offset: 0.8 },
           { transform: `rotate(0deg) scale(${petal.scale})` }
         ],
-        { duration: 820, easing: "cubic-bezier(.18,.72,.24,1)", fill: "forwards" }
+        {
+          duration: reducedMotion ? 210 : 820,
+          easing: "cubic-bezier(.18,.72,.24,1)",
+          fill: "forwards"
+        }
       ).finished;
       return Promise.all([visibility, bloom]);
     }
@@ -514,33 +514,18 @@
       roseAnimationStarted = true;
 
       const title = document.querySelector("h1");
-      if (reducedMotion) {
-        title.style.opacity = "1";
-        stem.style.strokeDashoffset = "0";
-        await Promise.all(leaves.map((leaf, index) => animateLeaf(leaf, index)));
-        petals.forEach((petal, index) => {
-          petal.element.style.opacity = "1";
-          petal.form.style.transform = `scale(${petal.scale})`;
-          const word = document.createElement("span");
-          word.className = "love-word";
-          word.textContent = "eu te amo";
-          word.style.left = percentX(destinations[index].x);
-          word.style.top = percentY(destinations[index].y);
-          word.style.opacity = "1";
-          word.style.transform = `translate(-50%, -50%) rotate(${destinations[index].angle}deg)`;
-          wordsLayer.append(word);
-        });
-        return;
-      }
-
       title.animate(
         [{ opacity: 0, transform: "translateY(9px)" }, { opacity: 1, transform: "translateY(0)" }],
-        { duration: 1200, easing: "ease-out", fill: "forwards" }
+        { duration: reducedMotion ? 320 : 1200, easing: "ease-out", fill: "forwards" }
       );
 
       await stem.animate(
         [{ strokeDashoffset: "1" }, { strokeDashoffset: "0" }],
-        { duration: 1700, easing: "cubic-bezier(.35,.03,.2,1)", fill: "forwards" }
+        {
+          duration: reducedMotion ? 480 : 1700,
+          easing: "cubic-bezier(.35,.03,.2,1)",
+          fill: "forwards"
+        }
       ).finished;
 
       await Promise.all(leaves.map((leaf, index) => animateLeaf(leaf, index)));
@@ -550,7 +535,7 @@
       for (let index = 0; index < petals.length; index += 1) {
         const petal = petals[index];
         petalAnimations.push(animatePetal(petal));
-        await wait(340);
+        await wait(reducedMotion ? 100 : 340);
         wordAnimations.push(moveWord(petal, destinations[index]));
       }
 
@@ -559,20 +544,18 @@
 
     async function enterRoseScreen() {
       button.disabled = true;
-      if (!reducedMotion) {
-        await button.animate(
-          [
-            { opacity: 1, transform: "translate(-50%, -50%) scale(1)" },
-            { opacity: 0, transform: "translate(-50%, -50%) scale(.82)" }
-          ],
-          { duration: 230, easing: "ease-in", fill: "forwards" }
-        ).finished;
-      }
+      await button.animate(
+        [
+          { opacity: 1, transform: "translate(-50%, -50%) scale(1)" },
+          { opacity: 0, transform: "translate(-50%, -50%) scale(.82)" }
+        ],
+        { duration: reducedMotion ? 120 : 230, easing: "ease-in", fill: "forwards" }
+      ).finished;
 
       roseScreen.classList.add("is-entering");
       requestAnimationFrame(() => roseScreen.classList.add("is-visible"));
       introScreen.classList.add("is-leaving");
-      await wait(reducedMotion ? 20 : 850);
+      await wait(reducedMotion ? 220 : 850);
       introScreen.style.visibility = "hidden";
       introScreen.setAttribute("aria-hidden", "true");
       roseScreen.setAttribute("aria-hidden", "false");
